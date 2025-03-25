@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live ECG Monitor</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #000000; /* Black background */
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            color: #ffffff;
+        }
+        #ecgPlot {
+            width: 90%;
+            height: 500px;
+            margin: auto;
+            background-color: black; /* Black background for plot */
+        }
+    </style>
+</head>
+<body>
+    <h2>Live ECG Monitoring</h2>
+    <div id="ecgPlot"></div>
+
+    <script>
+        // Replace with the latest ngrok WebSocket URL from Colab output
+        var socket = new WebSocket("wss://9bdd-34-16-147-6.ngrok-free.app/ws");
+
+        console.log("Connecting to WebSocket...");
+
+        socket.onopen = function() {
+            console.log("✅ WebSocket Connected!");
+        };
+
+        socket.onmessage = function(event) {
+            try {
+                var data = JSON.parse(event.data);
+                console.log("📊 Received Data:", data);
+
+                var timeAxis = data.time;
+                var ecgSignal = data.values;
+
+                // Plot ECG signal with neon green color
+                var trace = {
+                    x: timeAxis,
+                    y: ecgSignal,
+                    mode: 'lines',
+                    name: 'ECG Signal',
+                    line: { color: '#39ff14' }  // Neon green color
+                };
+
+                var layout = {
+                    title: {
+                        text: "Real-Time ECG Signal",
+                        font: { color: "#ffffff" }  // White title
+                    },
+                    plot_bgcolor: "black",  // Black plot background
+                    paper_bgcolor: "black", // Black outer background
+                    xaxis: { title: "Time", color: "#ffffff" },  // White axis labels
+                    yaxis: { title: "Amplitude", color: "#ffffff" },
+                    height: 600,  // Increased height
+                    dragmode: 'zoom',  // Enable zoom feature
+                    hovermode: 'x unified'
+                };
+
+                Plotly.newPlot('ecgPlot', [trace], layout);
+            } catch (error) {
+                console.error("⚠️ Error processing message:", error);
+            }
+        };
+
+        socket.onerror = function(error) {
+            console.error("❌ WebSocket Error:", error);
+        };
+
+        socket.onclose = function(event) {
+            console.warn("⚠️ WebSocket Disconnected!", event);
+        };
+    </script>
+</body>
+</html>
